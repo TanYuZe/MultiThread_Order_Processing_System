@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.platform</groupId>
+        <artifactId>order-processing-platform</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>load-test</artifactId>
+    <name>Load Tests (Gatling)</name>
+    <description>
+        Gatling load test simulations. NOT a Spring Boot application.
+        Run with: mvn gatling:test -Dsimulation=FlashSaleSimulation
+    </description>
+
+    <properties>
+        <gatling.simulationClass>com.platform.simulation.OrderCreationSimulation</gatling.simulationClass>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.gatling.highcharts</groupId>
+            <artifactId>gatling-charts-highcharts</artifactId>
+            <version>${gatling.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <testSourceDirectory>src/test/scala</testSourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>io.gatling</groupId>
+                <artifactId>gatling-maven-plugin</artifactId>
+                <version>${gatling.version}</version>
+                <configuration>
+                    <simulationClass>${gatling.simulationClass}</simulationClass>
+                    <resultsFolder>${project.build.directory}/gatling-results</resultsFolder>
+                </configuration>
+            </plugin>
+            <!-- Scala compiler for Gatling simulations -->
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <version>4.9.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <scalaVersion>2.13.14</scalaVersion>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

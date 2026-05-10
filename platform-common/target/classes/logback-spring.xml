@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="platform-service"/>
+
+    <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"service":"${appName}"}</customFields>
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+                <message>message</message>
+                <logger>logger</logger>
+                <thread>threadName</thread>
+                <level>level</level>
+            </fieldNames>
+            <!-- Include MDC fields in every log line -->
+            <includeMdcKeyName>correlationId</includeMdcKeyName>
+            <includeMdcKeyName>threadType</includeMdcKeyName>
+            <includeMdcKeyName>userId</includeMdcKeyName>
+            <includeMdcKeyName>orderId</includeMdcKeyName>
+            <includeMdcKeyName>paymentId</includeMdcKeyName>
+            <includeMdcKeyName>operation</includeMdcKeyName>
+        </encoder>
+    </appender>
+
+    <!-- Human-readable format for local development (activate with profile: local) -->
+    <appender name="CONSOLE_PLAIN" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level [%X{correlationId}] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <springProfile name="local">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE_PLAIN"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="!local">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE_JSON"/>
+        </root>
+    </springProfile>
+
+    <!-- Fine-grained control -->
+    <logger name="com.platform" level="DEBUG"/>
+    <logger name="org.springframework.kafka" level="INFO"/>
+    <logger name="org.hibernate.SQL" level="INFO"/>
+    <logger name="com.zaxxer.hikari" level="INFO"/>
+</configuration>

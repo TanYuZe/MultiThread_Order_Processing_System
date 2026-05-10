@@ -1,0 +1,109 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: payment-service
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/platform_db
+    username: platform
+    password: platform
+    hikari:
+      pool-name: HikariPool-PaymentService
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 3000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2s
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+    consumer:
+      group-id: payment-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.platform.*"
+    listener:
+      concurrency: 3
+
+  task:
+    execution:
+      pool:
+        core-size: 10
+        max-size: 30
+        queue-capacity: 200
+        thread-name-prefix: "payment-async-"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics,threaddump
+  metrics:
+    tags:
+      service: payment-service
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+# Mock payment gateway configuration
+platform:
+  gateway:
+    url: http://localhost:9999/mock-gateway  # mock endpoint
+    delay-ms: 100     # set to 30000 to simulate slow gateway (Scenario 8)
+    failure-rate: 0.0 # set to 1.0 to simulate outage (Scenario 4)
+    timeout-ms: 10000
+  idempotency:
+    ttl-hours: 24
+
+# Resilience4j circuit breaker
+resilience4j:
+  circuitbreaker:
+    instances:
+      payment-gateway:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+  retry:
+    instances:
+      payment-gateway:
+        max-attempts: 3
+        wait-duration: 500ms
+        exponential-backoff-multiplier: 2
+
+logging:
+  level:
+    com.platform: DEBUG
+  config: classpath:logback-spring.xml

@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"c:\\\\Users\\\\yuze1\\\\OneDrive\\\\Documents\\\\MultiThread_Order_Processing_System\" log --oneline)"
+    ]
+  }
+}
